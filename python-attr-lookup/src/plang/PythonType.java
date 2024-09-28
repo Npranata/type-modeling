@@ -39,9 +39,21 @@ public class PythonType extends PythonObject {
         return base;
     }
 
+
+     /**
+     * Constructs the MRO. Called only once, the first time we need the MRO; this class memoizes the
+     * result (i.e. it remembers the list buildMRO() returned and keeps returning it).
+     */
     @Override
     protected List<PythonObject> buildMRO() {
-        throw new UnsupportedOperationException("not implemented yet");
+        List<PythonObject> mro = new ArrayList<PythonObject>();
+        mro.add(this);
+        PythonObject currentBase = getBase();
+        while(currentBase!=null){
+            mro.add(currentBase);
+            currentBase = currentBase.getType();
+        }
+        return mro;
     }
 
     /**
