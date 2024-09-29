@@ -69,8 +69,20 @@ public class PythonObject {
      * @throws PythonAttributeException When there is no attribute on this object with that name.
      */
     public final PythonObject get(String attrName) throws PythonAttributeException {
-        throw new UnsupportedOperationException("not implemented yet");
+        if (attrs.containsKey(attrName)) {
+            return attrs.get(attrName);
+        }
+
+        // Iterate through the MRO and look for the attribute in base classes
+        for (PythonObject base : getMRO()) {
+            if (base.attrs.containsKey(attrName)) {
+                return base.attrs.get(attrName);  
+            }
+        }
+
+        throw new PythonAttributeException(this, attrName);
     }
+    
 
     /**
      * Add or changes the value of an attribute on this object. Note that it sets the value for
@@ -81,7 +93,7 @@ public class PythonObject {
      * @param value Its new value
      */
     public final void set(String attrName, PythonObject value) {
-        throw new UnsupportedOperationException("not implemented yet");
+        attrs.put(attrName, value);
     }
 
     @Override
