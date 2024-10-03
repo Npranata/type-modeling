@@ -39,8 +39,15 @@ class JavaVariable(JavaExpression):
         self.name = name                    #: The name of the variable (str)
         self.declared_type = declared_type  #: The declared type of the variable (JavaType)
     def static_type(self):
+        """
+        Returns declared variable type 
+        """
         return self.declared_type
+
     def check_types(self):
+        """
+        Placeholder for Method Type Checking
+        """
         pass
 
 
@@ -52,9 +59,15 @@ class JavaLiteral(JavaExpression):
         self.value = value  #: The literal value, as a string
         self.type = type    #: The type of the literal (JavaType)
     def static_type(self):
+        """
+        Returns type
+        """
         return self.type 
 
     def check_types(self):
+        """
+        Placeholder for Method Type Checking
+        """
         pass
 
 
@@ -78,9 +91,17 @@ class JavaAssignment(JavaExpression):
     def __init__(self, lhs, rhs):
         self.lhs = lhs
         self.rhs = rhs
+
     def static_type(self):
+        """
+        Returns declared type.
+        """
         return self.lhs.declared_type
+    
     def check_types(self):
+        """
+        Checks assignment's type
+        """
     # Ensure lhs and rhs types are compatible
         self.lhs.check_types()
         self.rhs.check_types()
@@ -109,51 +130,47 @@ class JavaMethodCall(JavaExpression):
         method_name (String): The name of the method to call
         args (list of Expressions): The arguments to pass to the method
     """
+
+
     def __init__(self, receiver, method_name, *args):
         self.receiver = receiver
         self.method_name = method_name
         self.args = args
     def static_type(self):
-        receiver_type = self.receiver.static_type()  # Get the static type of the receiver
-        # Assuming we have a method to look up the method return type by receiver type and method name
+        """
+        Returns the return type of the method being invoked.
+        """
+        receiver_type = self.receiver.static_type()  
         method_return_type = receiver_type.method_named(self.method_name)
         return method_return_type
 
     def check_types(self):
-    # Check the types of the receiver and the arguments
-        self.receiver.check_types()  # Ensure the receiver is valid
+        """
+         Validates the types of the method call, and make sure they have the right amount and type of arguments.
+        """
+        self.receiver.check_types() 
 
-        # Get the expected method from the receiver's type
         receiver_type = self.receiver.static_type()
         method = receiver_type.method_named(self.method_name)
 
-        # Check if the method exists
         if method is None:
             raise JavaTypeError(
                 f"Method '{self.method_name}' not found on type '{receiver_type.name}'."
             )
 
-        # # Check the number of arguments
-        expected_params = method.parameter_types # Get expected parameter types
-        # print(len(expected_params))
-        # print(len(self.args))
-        # print("Method Name:", self.method_name)
-        # print("Expected parameter types:", expected_params)  # Ensure this is being set correctly
-        # print("Actual argument count:", len(self.args))
-        if len(self.args) != len(expected_params):
+        expected_params = method.parameter_types 
+        if len(self.args) != len(expected_params) or  len(self.args) < len(expected_params):
             raise JavaArgumentCountError(
-                f"Method {self.method_name} expects {len(expected_params)} arguments but got {len(self.args)}."
+                  f"Wrong number of arguments for {receiver_type.name}.{self.method_name}(): expected {len(expected_params)}, got {len(self.args)}"
             )
-
         # # Check each argument type
-        # for arg, expected_param in zip(self.args, expected_params):
-        #     # arg.check_types()  # Ensure the argument itself is valid
-        #     arg_type = arg.static_type()
-
-        #     if not arg_type.is_subtype_of(expected_param):
-        #         raise JavaTypeMismatchError(
-        #             f"Cannot pass argument of type {arg_type.name} to parameter of type {expected_param.name}."
-        #         )
+        for arg, expected_param in zip(self.args, expected_params):
+            arg_type = arg.static_type()
+            if not arg_type.is_subtype_of(expected_param):
+                expected_types = ', '.join(param.name for param in expected_params)
+                raise JavaTypeMismatchError(
+                    f"{receiver_type.name}.{self.method_name}() expects arguments of type ({expected_types}), but got ({arg_type.name})"
+                )
    
     
 
@@ -178,6 +195,9 @@ class JavaConstructorCall(JavaExpression):
         self.args = args
 
     def static_type(self):
+        """
+        Returns instantiated type
+        """
         return self.instantiated_type
 
 class JavaTypeMismatchError(JavaTypeError):

@@ -89,6 +89,9 @@ class JavaPrimitiveType(JavaType):
     Primitive types are not object types and do not have methods.
     """
     def is_subtype_of(self, other):
+        """
+        Makes sure that primitive types are subtypes of each other
+        """
         # For primitives, subtyping is only true if the types are identical
         return isinstance(other, JavaPrimitiveType) and self.name == other.name
 
@@ -154,6 +157,8 @@ class JavaVoidType(JavaType):
     It is never legal to use the result of a method returning void inside a larger expression.
     Void is therefore subtype only of itself, and not any other type.
     """
+
+    
     def __init__(self):
         super().__init__("void")
 
@@ -164,9 +169,21 @@ class JavaNullType(JavaType):
     Null acts as though it is a subtype of all object types. However, it raises an exception for any
     attempt to look up a method.
     """
+
+
+    is_object_type = True   # Null can be treated as an object type
+    is_instantiable = False  # Null cannot be instantiated
+
     def __init__(self):
         super().__init__("null")
 
+    def is_subtype_of(self, other):
+        """Null is a subtype of all object types."""
+        return isinstance(other, JavaObjectType) or isinstance(other, JavaNullType)
+
+    def method_named(self, method_name):
+        """Null raises an error when trying to look up a method."""
+        raise NoSuchJavaMethod(f"Cannot invoke method {method_name}() on null")
 
 class JavaTypeError(Exception):
     """Indicates a compile-time type error in an expression.
