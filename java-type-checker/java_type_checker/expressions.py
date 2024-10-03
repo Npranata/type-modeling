@@ -93,8 +93,6 @@ class JavaAssignment(JavaExpression):
             f"Cannot assign {rhs_type.name} to variable {self.lhs.name} of type {lhs_type.name}"
         )
 
-   
-
 class JavaMethodCall(JavaExpression):
     """A Java method invocation.
 
@@ -115,17 +113,48 @@ class JavaMethodCall(JavaExpression):
         self.receiver = receiver
         self.method_name = method_name
         self.args = args
-
     def static_type(self):
         receiver_type = self.receiver.static_type()  # Get the static type of the receiver
-        method = receiver_type.method_named(self.method_name)
-        return method.return_type
-    def check_type(self):
-        self.receiver.check_types()
+        # Assuming we have a method to look up the method return type by receiver type and method name
+        method_return_type = receiver_type.method_named(self.method_name)
+        return method_return_type
+
+    def check_types(self):
+    # Check the types of the receiver and the arguments
+        self.receiver.check_types()  # Ensure the receiver is valid
+
+        # Get the expected method from the receiver's type
         receiver_type = self.receiver.static_type()
-    
-        if not receiver_type.is_object_type:
-            raise JavaTypeError(f"Cannot call methods on non-object type {receiver_type.name}")
+        method = receiver_type.method_named(self.method_name)
+
+        # Check if the method exists
+        if method is None:
+            raise JavaTypeError(
+                f"Method '{self.method_name}' not found on type '{receiver_type.name}'."
+            )
+
+        # # Check the number of arguments
+        expected_params = method.parameter_types # Get expected parameter types
+        # print(len(expected_params))
+        # print(len(self.args))
+        # print("Method Name:", self.method_name)
+        # print("Expected parameter types:", expected_params)  # Ensure this is being set correctly
+        # print("Actual argument count:", len(self.args))
+        if len(self.args) != len(expected_params):
+            raise JavaArgumentCountError(
+                f"Method {self.method_name} expects {len(expected_params)} arguments but got {len(self.args)}."
+            )
+
+        # # Check each argument type
+        # for arg, expected_param in zip(self.args, expected_params):
+        #     # arg.check_types()  # Ensure the argument itself is valid
+        #     arg_type = arg.static_type()
+
+        #     if not arg_type.is_subtype_of(expected_param):
+        #         raise JavaTypeMismatchError(
+        #             f"Cannot pass argument of type {arg_type.name} to parameter of type {expected_param.name}."
+        #         )
+   
     
 
 
